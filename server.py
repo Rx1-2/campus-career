@@ -799,6 +799,9 @@ def main():
             print("  （密码来自环境变量 ADMIN_PASSWORD）", flush=True)
         else:
             print("  （该密码仅本次显示，请立即记录；账号存于 career.db 的 users 表）", flush=True)
+    else:
+        print("  管理员账号已存在，密码沿用首次创建时设定的值", flush=True)
+        print("  （忘记密码：设置环境变量 ADMIN_PASSWORD 后重启即可重置）", flush=True)
     print("=" * 52, flush=True)
     try:
         httpd.serve_forever()

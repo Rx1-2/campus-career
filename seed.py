@@ -65,7 +65,6 @@ def seed(force=False):
 def ensure_ready():
     db.init_db()
     created = seed()
-    auth.ensure_admin()
     return created
 
 

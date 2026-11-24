@@ -30,6 +30,8 @@ def _bootstrap():
     admin = auth.ensure_admin()
     if admin:
         sys.stderr.write("[campus-career] 已创建管理员账号 admin / %s\n" % admin["password"])
+    else:
+        sys.stderr.write("[campus-career] 管理员账号已存在，密码沿用首次创建时设定的值\n")
     _ready = True
 
 

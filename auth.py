@@ -210,15 +210,30 @@ def ensure_admin():
 
     密码来源优先级：环境变量 ADMIN_PASSWORD > 随机生成（仅首次打印到日志）。
     """
-    if count_users():
-        return None
     env_password = (os.environ.get("ADMIN_PASSWORD") or "").strip()
+    if count_users():
+        if env_password and len(env_password) >= 8:
+            reset_password("admin", env_password)
+            return None
+        return None
     if env_password and len(env_password) >= 8:
         create_user("admin", env_password, "管理员", "admin")
         return {"username": "admin", "password": env_password, "from_env": True}
     password = secrets.token_urlsafe(9)
     create_user("admin", password, "管理员", "admin")
     return {"username": "admin", "password": password, "from_env": False}
+
+
+def reset_password(username, password):
+    conn = get_conn()
+    try:
+        cur = conn.execute(
+            "UPDATE users SET password_hash = ? WHERE username = ?",
+            (hash_password(password), username))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
 
 
 # ---------------------------------------------------------------- 登录限流
