@@ -1,0 +1,176 @@
+大学生职业网 CampusCareer —— PythonAnywhere 部署手册
+====================================================
+
+为什么选 PythonAnywhere：
+  · 不需要绑信用卡
+  · 免费账号的网站不会休眠（Render / Koyeb 免费档都会睡，打开要等半分钟）
+  · 网址固定，形如 你的用户名.pythonanywhere.com，不会变
+  · 专为 Python 应用设计，不需要 Docker、不需要装依赖
+  · 本项目零第三方依赖，只用标准库，PythonAnywhere 直接能跑
+
+唯一要知道的限制：免费账号每 3 个月要手动点一次 "Run until 3 months from today"
+续期，不点会被停用（代码和数据都还在，点一下就恢复）。
+
+
+一、准备工作：把代码传上去
+------------------------------------------------------
+方式 A（推荐）：从 GitHub 拉取
+  1. 登录 https://www.pythonanywhere.com/ ，注册一个免费 Beginner 账号。
+     用户名会成为网址的一部分，比如取 career-rx，网址就是 career-rx.pythonanywhere.com。
+  2. 顶部菜单 → Consoles → 点 "Bash" 开一个命令行。
+  3. 依次执行（把 Rx1-2 换成你的 GitHub 用户名）：
+
+       git clone https://github.com/Rx1-2/campus-career.git
+       cd campus-career
+       ls
+
+     看到 server.py、wsgi.py、templates 等文件就说明拉下来了。
+
+方式 B：上传压缩包
+  1. 顶部菜单 → Files → Upload a file，把 CampusCareer_V3.2.zip 传上去。
+  2. 再开 Bash 执行：
+
+       unzip CampusCareer_V3.2.zip
+       mv campus-career campus-career 2>/dev/null
+       ls
+
+方式说明：不要上传 career.db 和 .secret_key（压缩包里已排除）。
+第一次访问时会自动建库、灌入 70 个岗位等演示数据。
+
+
+二、创建 Web 应用
+------------------------------------------------------
+1. 顶部菜单 → Web → 点 "Add a new web app"。
+2. 域名直接确认（你的用户名.pythonanywhere.com）。
+3. 框架选 "Manual configuration" —— 重要，不要选 Flask/Django。
+4. Python 版本选 3.10（或 3.11、3.9 都行）。
+5. 点 Next，Web 应用创建完成，停留在配置页面。
+
+
+三、改两个地方（关键）
+------------------------------------------------------
+在 Web 配置页面往下滚，找到这两个输入框：
+
+1) Source code
+   填：/home/你的用户名/campus-career
+
+2) Working directory
+   填：/home/你的用户名/campus-career
+
+然后在同一页找到 "WSGI configuration file" 那一行，
+点右边的链接（形如 /var/www/你的用户名_pythonanywhere_com_wsgi.py）。
+把文件里原有的全部内容删掉，只粘贴下面这 3 行：
+
+------------------------------------------------------------------
+import sys
+sys.path.insert(0, "/home/你的用户名/campus-career")
+from wsgi import application
+------------------------------------------------------------------
+
+注意：把 你的用户名 换成真实的用户名，路径要对得上。
+保存（右上角 Save）。
+
+
+四、设置环境变量（让登录状态在重启后不失效）
+------------------------------------------------------
+Web 配置页面往下滚到 "Environment variables"，
+点 "Add a new environment variable"，加三条：
+
+  PYTHONIOENCODING   utf-8
+  CC_SECRET_KEY      e4f2279fe891f91a84b351b45cd299481ab158c53135c6f84f23cbda5f964d82
+  ADMIN_PASSWORD     Careerfc429e5e
+
+说明：
+  · CC_SECRET_KEY 是会话签名密钥。不设置也能跑，但 PythonAnywhere 每次重新加载
+    应用时密钥会变，已登录的人会被踢下线。设成固定值就没这问题。
+  · ADMIN_PASSWORD 是管理员 admin 的密码，只在第一次建库时生效。
+    想换密码，看本文最后"五、常用操作"。
+
+
+五、点 Reload，然后打开网址
+------------------------------------------------------
+1. 页面顶部绿色按钮 "Reload 你的用户名.pythonanywhere.com"，点它。
+2. 等 10~30 秒（第一次会建库灌数据）。
+3. 浏览器打开：https://你的用户名.pythonanywhere.com
+
+应该能看到登录页。用 admin + 你设的 ADMIN_PASSWORD 登录，
+或者点"立即注册"自己开一个新账号。
+
+如果打不开或报错，看本文最后"六、排查"。
+
+
+六、排查
+------------------------------------------------------
+Q: 打开显示 "Something went wrong" / 500
+A: 点 Web 页面的 "Error log" 看具体报错。最常见三种：
+   · WSGI 文件里的路径写错了 → 检查 /home/用户名/campus-career 是否真实存在
+   · 少写了 from wsgi import application
+   · 忘了 Reload
+
+Q: 页面能开但没样式（纯文字）
+A: 静态文件被拦了。检查 Source code 那栏是否填对，
+   再确认 /home/用户名/campus-career/static/css/style.css 这个文件存在。
+
+Q: 点登录没反应 / 提示请先登录
+A: 免费账号的 PythonAnywhere 支持 Cookie，正常不会出问题。
+   若一直登不上，去 Error log 看是否 CC_SECRET_KEY 里混入了空格。
+
+Q: 提示数据库 locked
+A: 免费账号仅一个 worker，正常不会出现。若出现，Reload 一次即可。
+
+Q: 中文显示成乱码
+A: 已经内置了乱码自动修复逻辑。若仍有问题，确认环境变量
+   PYTHONIOENCODING=utf-8 已添加（只影响日志，不影响页面）。
+
+Q: 网站被停了，显示 "This site is disabled"
+A: 免费账号每 3 个月要续期。Web 页面会有一个按钮
+   "Run until 3 months from today"，点一下就恢复，代码数据都不丢。
+
+Q: 想让同学访问更快
+A: PythonAnywhere 服务器在欧美，国内访问一般可以接受。
+   要更快只能上国内云服务器（阿里云/腾讯云学生机约 60-100 元/年），
+   把项目传上去跑 python server.py --host 0.0.0.0 --port 80，再用 Nginx 反代。
+
+
+七、常用操作
+------------------------------------------------------
+进入 Bash 控制台（Consoles → Bash）后：
+
+  改管理员密码：
+    cd ~/campus-career
+    python -c "import auth; auth.create_user('admin','新密码123','管理员','admin')"
+
+  看有几个用户：
+    python -c "import auth; print(auth.count_users())"
+
+  清空所有投递记录（演示前重置）：
+    python -c "import sqlite3; c=sqlite3.connect('career.db'); c.execute('DELETE FROM applications'); c.commit(); print('已清空')"
+
+  完全重置数据库（重新灌演示数据）：
+    rm career.db
+    然后去 Web 页面点 Reload，下次访问会自动重建。
+
+  拉了新代码后：
+    git pull
+    然后去 Web 页面点 Reload（必须点，否则还是旧代码）
+
+
+八、环境变量一览
+------------------------------------------------------
+PYTHONIOENCODING  utf-8（避免中文日志乱码）
+CC_SECRET_KEY     会话签名密钥，至少 32 位，建议设置
+ADMIN_PASSWORD    首次建库时 admin 的密码（不设则随机生成并打印到 Error log）
+CC_DB_PATH        数据库路径，默认项目目录下 career.db
+CC_HTTPS_REDIRECT 本项目在 PythonAnywhere 已被其反向代理处理 https，无需设置
+
+
+九、这个项目在 PythonAnywhere 上的运行方式
+------------------------------------------------------
+server.py 原本是自带 http.server 的独立应用，用 python server.py 启动。
+PythonAnywhere 只能通过 WSGI 调用应用，所以加了 wsgi.py 做适配：
+它用一个内存桩接住 Handler 的读写，把 WSGI 的请求翻译成 Handler 认识的样子，
+业务代码零改动。
+
+两种运行方式并存，互不影响：
+  · PythonAnywhere 上：wsgi.py 的 application 被调用
+  · 本地/自己服务器：python server.py --port 8080 照旧
