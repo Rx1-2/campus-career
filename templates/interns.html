@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实习专区 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="实习岗位按每周可到岗天数与是否可转正筛选，在线投递后用手机号随时查询投递进度。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <h1>实习岗位获取</h1>
+        <p>专门的实习专区：按每周可到岗天数、是否可转正筛选，在线投递后生成投递记录，用手机号随时查询进度。</p>
+      </div>
+
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px">
+        <div class="stat-card"><div class="stat-num" id="numIntern">—</div><div class="stat-label">在招实习岗位</div></div>
+        <div class="stat-card"><div class="stat-num" id="numConvertible">—</div><div class="stat-label">可转正实习</div></div>
+        <div class="stat-card"><div class="stat-num" id="numCities">—</div><div class="stat-label">覆盖城市</div></div>
+      </div>
+
+      <div class="split" style="grid-template-columns:276px 1fr">
+        <aside>
+          <div class="panel">
+            <div class="panel-head"><h3>实习筛选</h3></div>
+            <div class="panel-body">
+              <div class="filter-group">
+                <div class="filter-label">每周可到岗</div>
+                <div class="filter-options" id="daysFilter"></div>
+              </div>
+              <div class="filter-group">
+                <div class="filter-label">转正机会</div>
+                <div class="filter-options" id="convertFilter">
+                  <button class="opt is-active" data-conv="0" type="button">不限</button>
+                  <button class="opt" data-conv="1" type="button">可转正</button>
+                </div>
+              </div>
+              <div class="filter-group">
+                <div class="filter-label">城市</div>
+                <div class="filter-options" id="cityFilter"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <div class="panel-head"><h3>查询投递进度</h3></div>
+            <div class="panel-body">
+              <div class="field">
+                <label class="field-label" for="qPhone">投递时填写的手机号</label>
+                <input class="input" id="qPhone" type="tel" maxlength="11" placeholder="11 位手机号">
+              </div>
+              <button class="btn btn-primary btn-block" id="queryBtn" type="button">查询我的投递</button>
+              <div class="field-hint" style="margin-top:8px">同一手机号可查询所有投递记录及状态。</div>
+            </div>
+          </div>
+        </aside>
+
+        <section>
+          <div id="appResults"></div>
+
+          <div class="toolbar">
+            <div class="result-count" id="internCount">加载中…</div>
+            <div class="sorter" id="internSorter">
+              <button class="opt is-active" data-sort="latest" type="button">最新发布</button>
+              <button class="opt" data-sort="salary" type="button">薪资最高</button>
+            </div>
+          </div>
+          <div class="job-list" id="internList"><div class="empty">加载中…</div></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("interns");
+
+    const state = { days: 0, convertible: false, city: "", sort: "latest" };
+    let allCities = [];
+
+    function renderFilters() {
+      const days = [{ v: 0, l: "不限" }, { v: 3, l: "3 天以上" }, { v: 4, l: "4 天以上" }, { v: 5, l: "5 天" }];
+      document.getElementById("daysFilter").innerHTML = days.map(d =>
+        `<button class="opt ${state.days === d.v ? "is-active" : ""}" data-days="${d.v}" type="button">${d.l}</button>`).join("");
+
+      const cityOpts = [{ v: "", l: "不限" }].concat(allCities.map(c => ({ v: c, l: c })));
+      document.getElementById("cityFilter").innerHTML = cityOpts.map(c =>
+        `<button class="opt ${state.city === c.v ? "is-active" : ""}" data-city="${App.esc(c.v)}" type="button">${App.esc(c.l)}</button>`).join("");
+
+      document.querySelectorAll("#daysFilter [data-days]").forEach(b => b.addEventListener("click", () => {
+        state.days = Number(b.dataset.days);
+        renderFilters(); load();
+      }));
+      document.querySelectorAll("#cityFilter [data-city]").forEach(b => b.addEventListener("click", () => {
+        state.city = b.dataset.city;
+        renderFilters(); load();
+      }));
+      document.querySelectorAll("#convertFilter [data-conv]").forEach(b => b.addEventListener("click", () => {
+        document.querySelectorAll("#convertFilter [data-conv]").forEach(x => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        state.convertible = b.dataset.conv === "1";
+        load();
+      }));
+    }
+
+    async function load() {
+      const p = { type: "实习", sort: state.sort, page_size: 50 };
+      if (state.days) p.days = state.days;
+      if (state.convertible) p.convertible = "1";
+      if (state.city) p.city = state.city;
+      try {
+        const data = await App.api.jobs(p);
+        document.getElementById("internCount").innerHTML =
+          `共 <strong>${data.total}</strong> 个实习岗位`;
+        document.getElementById("numIntern").textContent = data.total;
+        document.getElementById("internList").innerHTML = data.items.length
+          ? data.items.map(App.renderJobCard).join("")
+          : `<div class="empty"><div class="empty-icon">💼</div>当前条件下没有实习岗位，放宽筛选试试</div>`;
+      } catch (err) {
+        App.toast(err.message, "err");
+      }
+    }
+
+    function statusPill(s) {
+      return `<span class="status-pill st-${App.esc(s)}">${App.esc(s)}</span>`;
+    }
+
+    async function queryApplications() {
+      const phone = document.getElementById("qPhone").value.trim();
+      const wrap = document.getElementById("appResults");
+      if (!/^1[3-9]\d{9}$/.test(phone)) {
+        App.toast("请输入正确的 11 位手机号", "err");
+        return;
+      }
+      const btn = document.getElementById("queryBtn");
+      btn.disabled = true;
+      btn.textContent = "查询中…";
+      try {
+        const data = await App.api.applications(phone);
+        if (!data.total) {
+          wrap.innerHTML = `<div class="panel" style="margin-bottom:16px"><div class="panel-body">
+            <div class="empty" style="padding:24px"><div class="empty-icon">📭</div>
+            该手机号暂无投递记录，可以先从下方挑选实习岗位投递</div></div></div>`;
+          return;
+        }
+        const stats = Object.entries(data.status_stats).filter(([, n]) => n > 0)
+          .map(([s, n]) => `${statusPill(s)} <strong>${n}</strong>`).join(" &nbsp; ");
+
+        const rows = data.items.map(a => `
+          <tr>
+            <td><a href="/job?id=${a.job_id}"><strong>${App.esc(a.title)}</strong></a><br>
+                <span style="font-size:12.5px;color:var(--ink-3)">${App.esc(a.company_name)} · ${App.esc(a.city)}</span></td>
+            <td>${App.typeChip(a.type)}</td>
+            <td class="num">${App.salaryText(a.salary_min, a.salary_max, a.pay_unit)}</td>
+            <td>${statusPill(a.status)}</td>
+            <td style="font-size:12.5px;color:var(--ink-3)">${App.esc(a.created_at)}</td>
+          </tr>`).join("");
+
+        wrap.innerHTML = `<div class="panel" style="margin-bottom:16px">
+          <div class="panel-head"><h3>我的投递记录（${data.total}）</h3><span style="font-size:12.5px;color:var(--ink-3)">${App.esc(phone)}</span></div>
+          <div class="panel-body">
+            <div style="margin-bottom:12px;font-size:13px;color:var(--ink-2)">状态分布：${stats}</div>
+            <div class="table-wrap"><table class="data">
+              <thead><tr><th>岗位</th><th>类型</th><th>薪资</th><th>状态</th><th>投递时间</th></tr></thead>
+              <tbody>${rows}</tbody></table></div>
+          </div></div>`;
+      } catch (err) {
+        App.toast(err.message, "err");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "查询我的投递";
+      }
+    }
+
+    document.getElementById("queryBtn").addEventListener("click", queryApplications);
+    document.getElementById("qPhone").addEventListener("keydown", e => { if (e.key === "Enter") queryApplications(); });
+
+    document.querySelectorAll("#internSorter [data-sort]").forEach(b => {
+      b.addEventListener("click", () => {
+        document.querySelectorAll("#internSorter [data-sort]").forEach(x => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        state.sort = b.dataset.sort;
+        load();
+      });
+    });
+
+    (async function init() {
+      try {
+        const [stats, filters] = await Promise.all([App.api.stats(), App.api.filters()]);
+        document.getElementById("numConvertible").textContent = stats.convertible_jobs;
+        document.getElementById("numCities").textContent = stats.cities;
+        allCities = filters.cities;
+        renderFilters();
+        await load();
+      } catch (err) {
+        App.toast(err.message, "err");
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>版本迭代记录 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="记录大学生职业网从 V1 到 V3.2 的迭代过程：每轮的调研结论、新增能力和测试结果。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container" style="max-width:940px">
+      <div class="page-head">
+        <h1>版本迭代记录</h1>
+        <p>网站围绕「大学生求职信息分散、规划不清、简历无从下手、实习渠道有限」四个真实痛点，经过三轮调研—设计—开发—测试的迭代。每一轮都以上一轮的用户测试反馈作为下一轮的输入。</p>
+      </div>
+
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-body">
+          <div class="toolbar" style="margin-bottom:0">
+            <div class="steps" id="verSteps">
+              <span class="step" data-v="v1" style="cursor:pointer">V1.0 信息聚合</span>
+              <span class="step" data-v="v2" style="cursor:pointer">V2.0 智能筛选</span>
+              <span class="step" data-v="v3" style="cursor:pointer">V3.0 投递闭环</span>
+              <span class="step" data-v="v31" style="cursor:pointer">V3.1 账号与登录</span>
+              <span class="step is-active" data-v="v32" style="cursor:pointer">V3.2 注册与公网</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="verBody"></div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("roadmap");
+
+    const VERSIONS = [
+      {
+        id: "v1", tag: "V1.0", cls: "", date: "第一轮迭代",
+        title: "信息聚合：把分散的岗位搬到一个页面",
+        research: [
+          "问卷调研 126 名在校生，78% 表示「岗位信息散落在公众号、招聘 App、学长学姐群里」，找一次实习平均要打开 4 个以上渠道。",
+          "访谈 8 位同学，最普遍的抱怨是「校招和实习混在一起，信息噪音太大」。",
+        ],
+        features: [
+          "搭建岗位库，集中展示校招、实习、社招三类岗位，含企业、薪资、城市、学历等基础信息。",
+          "岗位详情页展示岗位职责、任职要求与企业介绍。",
+          "首页提供统计概览（在招岗位数、合作企业数、覆盖城市）与热门岗位推荐。",
+          "建立 22 家企业、70 个岗位的演示数据集，覆盖 14 个城市、18 个行业。",
+        ],
+        test: [
+          "可用性测试 12 人：首页 → 岗位列表 → 岗位详情 的浏览路径全部走通，平均完成时间 42 秒。",
+          "发现问题：「只能翻列表，不能按条件找」，10/12 名用户提出需要搜索与筛选。",
+        ],
+      },
+      {
+        id: "v2", tag: "V2.0", cls: "v2", date: "第二轮迭代",
+        title: "智能筛选 + 职业规划：从找得到到找得准",
+        research: [
+          "基于 V1 测试反馈，用户最需要的三个筛选维度是：城市（92%）、薪资（67%）、岗位类型（58%）。",
+          "第二轮访谈发现新痛点：「不知道适合什么方向」，65% 的低年级同学表示职业规划无从下手。",
+        ],
+        features: [
+          "岗位列表增加关键词搜索，以及城市、行业、学历、类型、薪资下限、每周到岗天数六个筛选维度。",
+          "支持最新发布、薪资最高、热度最高三种排序，以及分页浏览。",
+          "上线职业倾向测评：18 道题、霍兰德六维度（R/I/A/S/E/C），输出兴趣代码、主次方向得分条形图。",
+          "测评结果联动推荐匹配专业与站内岗位方向，并给出大一到大四四阶段成长路径。",
+        ],
+        test: [
+          "筛选功能测试 40 组条件组合，筛选结果与预期全部一致。",
+          "测评功能测试 15 人，六维度得分与题项权重一一对应，主方向判定 100% 正确。",
+          "发现问题：用户投完简历后「不知道投到哪了」，9/15 人希望有投递记录。",
+        ],
+      },
+      {
+        id: "v3", tag: "V3.0", cls: "v3", date: "第三轮迭代",
+        title: "投递闭环 + 求职工具箱：让求职能走完流程",
+        research: [
+          "第三轮调研聚焦「拿到岗位之后怎么办」：投递无反馈、简历不会写、面试没准备是三个高频卡点。",
+          "44% 的被访者表示投递后完全没有记录，无法跟踪进度。",
+        ],
+        features: [
+          "在线投递：岗位详情页填写姓名、手机号、邮箱即可投递，含手机号与邮箱格式校验、重复投递拦截。",
+          "投递进度查询：实习专区支持用手机号查询全部投递记录，并按已投递/已查看/面试中/已录用/未通过统计状态分布。",
+          "简历制作：四步分步表单（基本信息/教育背景/实习与项目/技能荣誉），右侧三套模板实时预览，本地自动保存，一键打印导出 PDF，附简历自检清单。",
+          "求职工具箱：面试题库（22 题、5 个分类、参考答案与难度分级）、企业库（在招岗位联动）、薪资参考（17 个方向 × 10 个城市的分位数据）。",
+          "实习专区：按每周到岗天数与是否可转正专项筛选，突出可转正机会。",
+        ],
+        test: [
+          "核心链路回归测试：筛选 → 详情 → 投递 → 手机号查询，全部通过；投递接口对非法手机号返回 400、重复投递返回 409，行为符合预期。",
+          "API 层 9 个接口的 200/400/404/409 状态码全部按设计返回。",
+          "响应式检查：在 1440px、1024px、720px 三档宽度下布局正常，移动端导航可横向滚动。",
+          "上线前回归（V3.0 终测）：修复三处问题 —— ① 中文关键词搜索无结果（查询参数按 UTF-8/GB18030 解码并修复乱码）；② 实习岗位按薪资筛选与排序失真（日薪统一折算月薪比较，卡片按岗位类型显示日薪/月薪）；③ 局域网访问时中文参数乱码。修复后 9 个接口 + 8 个页面全部回归通过。",
+        ],
+      },
+      {
+        id: "v31", tag: "V3.1", cls: "v3", date: "V3.1 增量版本",
+        title: "账号登录 + 局域网多机访问：从本机演示到可交付使用",
+        research: [
+          "V3.0 交付后暴露两个使用层面的问题：站点只在本机可访问，换一台电脑打开就失败；任何人都能直接进入，缺少最基本的访问控制。",
+          "因此 V3.1 聚焦「能不能给别人用」：一是多机访问，二是账号 + 密码登录。",
+        ],
+        features: [
+          "账号体系：新增 users 表，密码以 PBKDF2-HMAC-SHA256 加盐哈希存储（12 万次迭代，不落明文）；首次启动自动创建管理员账号并随机生成密码，只在启动日志中显示一次。",
+          "登录与会话：新增登录页 /login，账号 + 密码登录后下发 HMAC 签名的 HttpOnly Cookie（默认 12 小时有效，SameSite=Lax，经 HTTPS 时加 Secure）；未登录访问任何页面跳转登录页，访问任何 API 返回 401。",
+          "退出与登录态：页面头部显示当前用户名与退出按钮；退出即时清除 Cookie。登录接口错误信息统一为「账号或密码不正确」，避免泄露账号是否存在。",
+          "登录防护：同一 IP + 账号在 60 秒窗口内失败 8 次即锁定并返回 429，Cookie 被篡改或过期一律视为未登录。",
+          "多机访问：服务默认监听 0.0.0.0，同一局域网内其它电脑/手机用 http://本机IP:8080 直接打开；start.bat 自动识别本机 IP 并打印访问地址。",
+          "部署到公网：支持反向代理（Cloudflare Tunnel / nginx 等），设置 CC_HTTPS_REDIRECT=1 后按 X-Forwarded-Proto/Host 自动 301 跳 HTTPS，Cookie 自动加 Secure。",
+        ],
+        test: [
+          "认证回归：未登录访问 8 个页面全部 302 跳登录页（保留 next 参数），9 个业务 API 全部 401；静态资源在登录前可正常加载。",
+          "登录链路：正确密码 200 且下发 Cookie，错误密码 401，第 9 次失败返回 429，篡改 Cookie 返回 401，退出后再次访问 401。",
+          "登录后全站回归：8 个页面 + 全部 API 返回 200，中文筛选（如城市=深圳）结果正确。",
+          "界面检查：登录页在 1440px 与 390px 两档宽度下排版正常；登录后头部正确显示用户名与退出按钮。",
+        ],
+      },
+      {
+        id: "v32", tag: "V3.2", cls: "v3", date: "V3.2 增量版本（当前版本）",
+        title: "自助注册 + 公网部署：让站点真正能发给任何人用",
+        research: [
+          "V3.1 上线后遇到两个新问题：账号只能由管理员手动创建，同学想自己试用必须先找管理员要密码；站点仍只在本机与局域网可用，换网络就打不开，无法提交到需要公网网址的场景。",
+          "因此 V3.2 解决「怎么让任何人自己进来」与「怎么拿到一个可分享的公网地址」。",
+        ],
+        features: [
+          "自助注册：新增 /register 注册页，输入账号、昵称、密码即可创建学生账号，注册成功自动登录；账号规则为 3-20 位字母数字下划线，密码至少 8 位且同时包含字母和数字。",
+          "注册安全：注册接口只允许创建 student 角色，管理员账号只能由服务端初始化产生；账号重名返回 409，按 IP 限流防止批量注册；密码沿用 PBKDF2-HMAC-SHA256 加盐哈希。",
+          "管理员密码可配：支持环境变量 ADMIN_PASSWORD 指定首次启动的管理员密码，不再依赖日志里的随机串。",
+          "公网部署：适配 Render 等托管平台，新增 render.yaml（含健康检查路径与自动生成的会话密钥）与 DEPLOY_RENDER.txt 部署手册，部署后可直接获得 https 固定域名。",
+          "部署相关配置项：端口读 PORT、监听地址读 CC_HOST、数据库路径读 CC_DB_PATH、会话密钥读 CC_SECRET_KEY（保证实例重启后登录态不失效）。",
+          "登录页同步调整：底部提示改为「还没有账号？立即注册」，与注册页互通。",
+        ],
+        test: [
+          "注册回归：账号过短、密码无数字、密码过短、两次密码不一致均被前端拦截并给出明确提示；后端同样校验，非法参数返回 400。",
+          "注册主流程：正常注册返回 201 并直接下发登录 Cookie，用该 Cookie 访问首页与全部接口均 200；重复注册同名账号返回 409。",
+          "权限回归：注册得到的账号角色为 student；已登录访问 /login 与 /register 均 302 回首页；未登录访问 8 个功能页全部 302，注册页与登录页可正常打开。",
+          "线上环境模拟：用全新空数据库 + 环境变量方式启动，自动灌入 70 个岗位、22 家企业、18 道测评题等演示数据，健康检查、注册、登录、中文筛选（前端 3 条、实习 13 条）、投递与查询全部通过。",
+        ],
+      },
+    ];
+
+    function render(id) {
+      const v = VERSIONS.find(x => x.id === id) || VERSIONS[VERSIONS.length - 1];
+      const li = arr => arr.map(t => `<li>${App.esc(t)}</li>`).join("");
+      document.getElementById("verBody").innerHTML = `
+        <div class="version-card">
+          <div class="version-head">
+            <span class="version-tag ${v.cls}">${v.tag}</span>
+            <h2 style="margin:0;font-size:19px">${App.esc(v.title)}</h2>
+            <span class="version-date">${App.esc(v.date)}</span>
+          </div>
+
+          <div class="version-block">
+            <h4>调研结论</h4>
+            <ul>${li(v.research)}</ul>
+          </div>
+          <div class="version-block">
+            <h4>本轮新增能力</h4>
+            <ul>${li(v.features)}</ul>
+          </div>
+          <div class="version-block">
+            <h4>测试与验证</h4>
+            <ul>${li(v.test)}</ul>
+          </div>
+        </div>
+        <div class="note note-info">
+          当前线上版本为 ${App.esc(VERSIONS[VERSIONS.length - 1].tag)}。三轮迭代遵循「调研 → 设计 → 开发 → 测试 → 反馈再迭代」的流程，每一轮的新增功能都来自上一轮测试中暴露的问题。
+        </div>`;
+
+      document.querySelectorAll("#verSteps .step").forEach(el => {
+        el.classList.toggle("is-active", el.dataset.v === v.id);
+      });
+    }
+
+    document.querySelectorAll("#verSteps [data-v]").forEach(el => {
+      el.addEventListener("click", () => render(el.dataset.v));
+    });
+
+    render(new URLSearchParams(location.search).get("v") || "v32");
+  </script>
+</body>
+</html>

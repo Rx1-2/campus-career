@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>岗位详情 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="查看岗位职责、任职要求、企业信息，并在线投递简历。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container">
+      <div class="split" style="grid-template-columns:1fr 320px">
+        <section id="detailMain">
+          <div class="empty">加载中…</div>
+        </section>
+
+        <aside>
+          <div class="panel" id="applyPanel">
+            <div class="panel-head"><h3>在线投递</h3></div>
+            <div class="panel-body">
+              <div class="field">
+                <label class="field-label" for="fName">姓名</label>
+                <input class="input" id="fName" type="text" placeholder="2-20 个字" maxlength="20">
+              </div>
+              <div class="field">
+                <label class="field-label" for="fPhone">手机号</label>
+                <input class="input" id="fPhone" type="tel" placeholder="11 位手机号" maxlength="11">
+                <div class="field-hint">投递后可用该手机号在实习专区查询进度</div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="fEmail">邮箱</label>
+                <input class="input" id="fEmail" type="email" placeholder="用于接收面试通知">
+              </div>
+              <button class="btn btn-primary btn-block" id="applyBtn" type="button">提交投递</button>
+              <div class="field-hint" style="margin-top:10px">投递为教学演示行为，仅写入本站数据库，不会实际发送给企业。</div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <div class="panel-head"><h3>投递提示</h3></div>
+            <div class="panel-body">
+              <ul style="font-size:13px;color:var(--ink-2);padding-left:18px;margin:0">
+                <li>投递前建议先到「简历制作」完善简历</li>
+                <li>同一手机号对同一岗位只能投递一次</li>
+                <li>可到「求职工具箱」先刷一遍相关面试题</li>
+              </ul>
+              <div style="display:grid;gap:8px;margin-top:12px">
+                <a class="btn btn-light btn-sm btn-block" href="/resume">去制作简历</a>
+                <a class="btn btn-light btn-sm btn-block" href="/interns">查询投递进度</a>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("jobs");
+    const jobId = App.param("id");
+    let currentJob = null;
+
+    function renderJob(job) {
+      const c = job.company;
+      const tags = (c.tags || "").split(",").filter(Boolean)
+        .map(t => `<span class="chip">${App.esc(t)}</span>`).join("");
+
+      const related = job.related.length
+        ? `<div class="content-block"><h3>该企业其他在招岗位</h3>
+             <div class="job-list">${job.related.map(App.renderJobCard).join("")}</div></div>`
+        : "";
+
+      const similar = job.similar.length
+        ? `<div class="content-block"><h3>你可能还感兴趣</h3>
+             <div class="job-list">${job.similar.map(App.renderJobCard).join("")}</div></div>`
+        : "";
+
+      return `
+      <div class="detail-hero">
+        <div class="detail-head">
+          <div class="detail-logo">${App.esc(c.logo_text || c.name.slice(0, 2))}</div>
+          <div style="min-width:0">
+            <div class="detail-title">${App.esc(job.title)}</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--ink-2);font-size:14px">
+              <span>${App.esc(c.name)}</span><span class="chip">${App.esc(c.industry)}</span><span class="chip">${App.esc(c.size)}</span>
+            </div>
+          </div>
+          <div class="detail-pay">
+            <strong>${App.salaryText(job.salary_min, job.salary_max)}</strong>
+            <span style="font-size:12.5px;color:var(--ink-3)">${job.type === "实习" ? "日薪" : "月薪"}</span>
+          </div>
+        </div>
+
+        <div class="job-meta" style="margin-top:16px">
+          ${App.typeChip(job.type)}
+          ${job.convertible ? '<span class="chip chip-success">可转正</span>' : ""}
+          <span class="chip">${App.esc(job.city)}</span>
+          <span class="chip">${App.esc(job.degree)}</span>
+          <span class="chip">${job.days_per_week >= 5 ? "每周 5 天" : "每周 " + job.days_per_week + " 天"}</span>
+          <span class="chip chip-line">热度 ${App.esc(job.heat)}</span>
+          <span class="chip chip-line">发布于 ${App.esc(job.publish_date)}</span>
+        </div>
+        ${tags ? `<div class="tags-row">${tags}</div>` : ""}
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-body">
+          <div class="content-block" style="margin-top:0"><h3>岗位职责</h3>
+            <div class="prose">${App.esc(job.description)}</div></div>
+          <div class="content-block"><h3>任职要求</h3>
+            <div class="prose">${App.esc(job.requirement)}</div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head"><h3>企业信息</h3><a class="btn btn-ghost btn-sm" href="/toolbox#companies">查看更多企业</a></div>
+        <div class="panel-body">
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div class="job-card-logo" style="width:52px;height:52px;flex:0 0 52px">${App.esc(c.logo_text || c.name.slice(0, 2))}</div>
+            <div>
+              <div style="font-weight:700;font-size:15.5px">${App.esc(c.name)}</div>
+              <div style="font-size:13px;color:var(--ink-3);margin-bottom:6px">${App.esc(c.industry)} · ${App.esc(c.size)} · ${App.esc(c.city)}</div>
+              <div class="prose">${App.esc(c.intro)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${related}${similar}`;
+    }
+
+    async function load() {
+      if (!jobId) {
+        document.getElementById("detailMain").innerHTML = `<div class="empty"><div class="empty-icon">🔍</div>
+          缺少岗位参数，请从 <a href="/jobs">岗位列表</a> 进入</div>`;
+        return;
+      }
+      try {
+        currentJob = await App.api.job(jobId);
+        document.title = currentJob.title + " · " + currentJob.company.name + " · 大学生职业网";
+        document.getElementById("detailMain").innerHTML = renderJob(currentJob);
+        document.getElementById("applyBtn").textContent = "投递「" + currentJob.title.slice(0, 10) + "」";
+      } catch (err) {
+        document.getElementById("detailMain").innerHTML =
+          `<div class="empty"><div class="empty-icon">🔍</div>${App.esc(err.message)}<br><br>
+           <a class="btn btn-primary btn-sm" href="/jobs">返回岗位列表</a></div>`;
+        document.getElementById("applyBtn").disabled = true;
+      }
+    }
+
+    document.getElementById("applyBtn").addEventListener("click", async function () {
+      const btn = this;
+      const body = {
+        name: document.getElementById("fName").value.trim(),
+        phone: document.getElementById("fPhone").value.trim(),
+        email: document.getElementById("fEmail").value.trim(),
+        job_id: Number(jobId),
+      };
+      btn.disabled = true;
+      btn.textContent = "提交中…";
+      try {
+        await App.api.apply(body);
+        App.toast("投递成功，可到实习专区查询进度", "ok");
+        btn.textContent = "已投递 ✓";
+      } catch (err) {
+        App.toast(err.message, "err");
+        btn.disabled = false;
+        btn.textContent = "提交投递";
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

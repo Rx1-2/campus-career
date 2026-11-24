@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>简历制作 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="分步填写基本信息、教育背景、实习项目与技能荣誉，右侧实时预览三套简历模板，一键打印或导出 PDF。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <h1>简历制作</h1>
+        <p>按步骤填写，右侧实时预览。内容自动保存在本机浏览器，随时回来继续编辑；完成后可直接打印或另存为 PDF 投递。</p>
+      </div>
+
+      <div class="resume-layout">
+        <section class="panel no-print">
+          <div class="panel-body">
+            <div class="steps" id="steps">
+              <span class="step is-active" data-step="1">1 基本信息</span>
+              <span class="step" data-step="2">2 教育背景</span>
+              <span class="step" data-step="3">3 实习与项目</span>
+              <span class="step" data-step="4">4 技能荣誉</span>
+            </div>
+
+            <!-- step 1 -->
+            <div class="step-panel" data-panel="1">
+              <div class="field"><label class="field-label" for="rName">姓名</label>
+                <input class="input" id="rName" data-model="name" placeholder="张三"></div>
+              <div class="field"><label class="field-label" for="rTitle">求职意向</label>
+                <input class="input" id="rTitle" data-model="target" placeholder="前端开发工程师"></div>
+              <div class="field"><label class="field-label" for="rPhone">手机号</label>
+                <input class="input" id="rPhone" data-model="phone" placeholder="13800138000"></div>
+              <div class="field"><label class="field-label" for="rEmail">邮箱</label>
+                <input class="input" id="rEmail" data-model="email" placeholder="zhangsan@example.com"></div>
+              <div class="field"><label class="field-label" for="rCity">所在城市</label>
+                <input class="input" id="rCity" data-model="city" placeholder="杭州"></div>
+              <div class="field"><label class="field-label" for="rIntro">一句话自我评价</label>
+                <textarea class="textarea" id="rIntro" data-model="intro" placeholder="例如：计算机专业应届生，两年 React 项目经验，主导过校园二手交易平台前端开发。"></textarea></div>
+            </div>
+
+            <!-- step 2 -->
+            <div class="step-panel" data-panel="2" hidden>
+              <div class="field"><label class="field-label" for="rSchool">学校</label>
+                <input class="input" id="rSchool" data-model="school" placeholder="某某大学"></div>
+              <div class="field"><label class="field-label" for="rMajor">专业与学历</label>
+                <input class="input" id="rMajor" data-model="major" placeholder="计算机科学与技术 · 本科"></div>
+              <div class="field"><label class="field-label" for="rPeriod">在校时间</label>
+                <input class="input" id="rPeriod" data-model="period" placeholder="2023.09 - 2027.06"></div>
+              <div class="field"><label class="field-label" for="rCourses">主修课程</label>
+                <textarea class="textarea" id="rCourses" data-model="courses" placeholder="数据结构、操作系统、计算机网络、数据库原理、软件工程"></textarea></div>
+              <div class="field"><label class="field-label" for="rGpa">成绩与排名</label>
+                <input class="input" id="rGpa" data-model="gpa" placeholder="GPA 3.8/4.0，专业前 10%"></div>
+            </div>
+
+            <!-- step 3 -->
+            <div class="step-panel" data-panel="3" hidden>
+              <div class="field"><label class="field-label" for="rIntern">实习经历</label>
+                <textarea class="textarea" id="rIntern" data-model="intern" rows="6" style="min-height:120px"
+                  placeholder="2026.07-2026.09 某某科技 · 前端开发实习生&#10;- 负责数据看板页面开发，交付 12 个业务模块&#10;- 优化首屏加载时间从 3.2s 降至 1.4s"></textarea>
+                <div class="field-hint">建议用「时间 + 单位 + 岗位 + 具体成果（最好有量化数据）」的格式。</div>
+              </div>
+              <div class="field"><label class="field-label" for="rProject">项目经历</label>
+                <textarea class="textarea" id="rProject" data-model="project" rows="6" style="min-height:120px"
+                  placeholder="校园二手交易平台（个人项目）&#10;- 技术栈：React + Node.js + MySQL&#10;- 负责前端架构与全部页面开发，累计注册用户 1200+"></textarea></div>
+              <div class="field"><label class="field-label" for="rPractice">校园实践与竞赛</label>
+                <textarea class="textarea" id="rPractice" data-model="practice" rows="4"
+                  placeholder="担任校学生会技术部部长，组织三场技术分享；获省级程序设计竞赛二等奖"></textarea></div>
+            </div>
+
+            <!-- step 4 -->
+            <div class="step-panel" data-panel="4" hidden>
+              <div class="field"><label class="field-label" for="rSkills">专业技能</label>
+                <textarea class="textarea" id="rSkills" data-model="skills"
+                  placeholder="熟练掌握 HTML/CSS/JavaScript、React、Vue；熟悉 Node.js、Git；了解 Webpack 工程化"></textarea></div>
+              <div class="field"><label class="field-label" for="rCerts">证书与荣誉</label>
+                <textarea class="textarea" id="rCerts" data-model="certs"
+                  placeholder="大学英语六级（CET-6 560分）；校级一等奖学金；优秀学生干部"></textarea></div>
+
+              <div style="font-size:13px;font-weight:600;color:var(--ink-2);margin:18px 0 8px">简历自检清单</div>
+              <ul class="checklist" id="checklist"></ul>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+              <button class="btn btn-ghost" id="prevStep" type="button">上一步</button>
+              <button class="btn btn-primary" id="nextStep" type="button">下一步</button>
+              <button class="btn btn-ghost" id="clearAll" type="button" style="margin-left:auto">清空</button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="toolbar no-print">
+            <div class="tpl-picker" style="max-width:320px;margin-bottom:0">
+              <button class="is-active" data-tpl="tpl-blue" type="button">蓝色商务</button>
+              <button data-tpl="tpl-green" type="button">绿色清新</button>
+              <button data-tpl="tpl-dark" type="button">黑白极简</button>
+            </div>
+            <button class="btn btn-accent" id="printBtn" type="button">打印 / 导出 PDF</button>
+          </div>
+          <div class="paper-wrap">
+            <div class="paper tpl-blue" id="paper"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("resume");
+
+    const RESUME_KEY = "cc_resume_data";
+    const TPL_KEY = "cc_resume_tpl";
+    const FIELDS = ["name", "target", "phone", "email", "city", "intro", "school", "major",
+                    "period", "courses", "gpa", "intern", "project", "practice", "skills", "certs"];
+
+    const CHECKLIST = [
+      "简历篇幅控制在一页，重点信息放在最前面",
+      "求职意向与投递岗位一致，不写泛泛的“均可”",
+      "每段经历都有具体成果，尽量带数字",
+      "技能描述匹配岗位要求的关键词",
+      "手机号和邮箱反复核对，确保能联系上你",
+      "使用 PDF 格式投递，避免排版错乱",
+      "文件名规范，例如「姓名-岗位-学校」",
+      "通读一遍，检查错别字与格式统一",
+    ];
+
+    let data = {};
+    FIELDS.forEach(f => { data[f] = ""; });
+    let currentStep = 1;
+    let currentTpl = "tpl-blue";
+
+    function loadStored() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(RESUME_KEY) || "null");
+        if (saved) FIELDS.forEach(f => { if (typeof saved[f] === "string") data[f] = saved[f]; });
+      } catch (e) { /* 忽略损坏数据 */ }
+      const tpl = localStorage.getItem(TPL_KEY);
+      if (tpl) currentTpl = tpl;
+    }
+
+    function persist() {
+      try { localStorage.setItem(RESUME_KEY, JSON.stringify(data)); } catch (e) { /* 存储满则忽略 */ }
+    }
+
+    function fillInputs() {
+      document.querySelectorAll("[data-model]").forEach(el => {
+        el.value = data[el.dataset.model] || "";
+      });
+    }
+
+    const esc = App.esc;
+    const nl = v => esc(v).replace(/\n/g, "<br>");
+
+    function renderPaper() {
+      const d = data;
+      const name = d.name || "你的姓名";
+      const contact = [d.phone, d.email, d.city, d.target ? "求职意向：" + d.target : ""]
+        .filter(Boolean).map(esc).join(" &nbsp;|&nbsp; ");
+      const sec = (title, body) => body
+        ? `<div class="paper-sec"><div class="paper-sec-title">${title}</div>
+             <div class="paper-sec-body">${body}</div></div>` : "";
+
+      const eduLine = [d.school, d.major].filter(Boolean).map(esc).join(" &nbsp;·&nbsp; ");
+      const edu = (eduLine || d.period)
+        ? `<div class="paper-line"><span>${eduLine}</span><span class="paper-muted">${esc(d.period)}</span></div>`
+          + (d.gpa ? `<div class="paper-muted" style="font-size:12.2px">${esc(d.gpa)}</div>` : "") : "";
+
+      document.getElementById("paper").className = "paper " + currentTpl;
+      document.getElementById("paper").innerHTML = `
+        <div class="paper-name">${esc(name)}</div>
+        ${contact ? `<div class="paper-contact">${contact}</div>` : ""}
+        ${sec("自我评价", d.intro ? nl(d.intro) : "")}
+        ${sec("教育背景", edu + (d.courses ? `<div style="margin-top:4px">主修课程：${nl(d.courses)}</div>` : ""))}
+        ${sec("实习经历", d.intern ? nl(d.intern) : "")}
+        ${sec("项目经历", d.project ? nl(d.project) : "")}
+        ${sec("校园实践与竞赛", d.practice ? nl(d.practice) : "")}
+        ${sec("专业技能", d.skills ? nl(d.skills) : "")}
+        ${sec("证书与荣誉", d.certs ? nl(d.certs) : "")}
+        ${!Object.values(d).some(Boolean) ? '<div class="paper-muted" style="margin-top:40px;text-align:center;font-size:13px">左侧填写内容后，这里会实时生成你的简历</div>' : ""}`;
+    }
+
+    function updateStepUI() {
+      document.querySelectorAll("#steps .step").forEach(el => {
+        const n = Number(el.dataset.step);
+        el.classList.toggle("is-active", n === currentStep);
+        el.classList.toggle("is-done", n < currentStep);
+      });
+      document.querySelectorAll(".step-panel").forEach(el => {
+        el.hidden = Number(el.dataset.panel) !== currentStep;
+      });
+      document.getElementById("prevStep").disabled = currentStep === 1;
+      document.getElementById("nextStep").textContent = currentStep === 4 ? "完成" : "下一步";
+    }
+
+    function goStep(n) {
+      currentStep = Math.max(1, Math.min(4, n));
+      updateStepUI();
+    }
+
+    document.querySelectorAll("[data-model]").forEach(el => {
+      el.addEventListener("input", () => {
+        data[el.dataset.model] = el.value;
+        renderPaper();
+        persist();
+      });
+    });
+
+    document.getElementById("prevStep").addEventListener("click", () => goStep(currentStep - 1));
+    document.getElementById("nextStep").addEventListener("click", () => {
+      if (currentStep === 4) {
+        App.toast("简历填写完成，可以打印或导出 PDF 了", "ok");
+        return;
+      }
+      goStep(currentStep + 1);
+    });
+    document.querySelectorAll("#steps .step").forEach(el => {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => goStep(Number(el.dataset.step)));
+    });
+
+    document.querySelectorAll(".tpl-picker [data-tpl]").forEach(b => {
+      b.addEventListener("click", () => {
+        document.querySelectorAll(".tpl-picker [data-tpl]").forEach(x => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        currentTpl = b.dataset.tpl;
+        localStorage.setItem(TPL_KEY, currentTpl);
+        renderPaper();
+      });
+    });
+
+    document.getElementById("printBtn").addEventListener("click", () => {
+      if (!data.name && !data.school) {
+        App.toast("先填写基本信息再导出会更好", "err");
+      }
+      window.print();
+    });
+
+    document.getElementById("clearAll").addEventListener("click", () => {
+      if (!confirm("确定清空所有已填写内容吗？此操作不可恢复。")) return;
+      FIELDS.forEach(f => { data[f] = ""; });
+      persist();
+      fillInputs();
+      renderPaper();
+      document.querySelectorAll("#checklist input").forEach(i => { i.checked = false; });
+      App.toast("已清空", "ok");
+    });
+
+    document.getElementById("checklist").innerHTML = CHECKLIST.map((t, i) => `
+      <li><input type="checkbox" id="chk${i}"><label for="chk${i}">${esc(t)}</label></li>`).join("");
+
+    (async function init() {
+      loadStored();
+      fillInputs();
+      document.querySelectorAll(".tpl-picker [data-tpl]").forEach(b => {
+        b.classList.toggle("is-active", b.dataset.tpl === currentTpl);
+      });
+      renderPaper();
+      updateStepUI();
+    })();
+  </script>
+</body>
+</html>

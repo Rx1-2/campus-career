@@ -1,0 +1,109 @@
+大学生职业网 CampusCareer —— 公网部署手册（Render）
+======================================================
+
+本项目零第三方依赖，只用 Python 标准库，因此不需要 pip 安装任何包，
+也不需要 requirements.txt。部署时只需把代码放到平台上跑起来即可。
+
+
+一、先确认本地能跑，且代码已上传到 GitHub
+------------------------------------------------------
+1. 本地双击 start.bat，浏览器打开 http://127.0.0.1:8080 能登录，说明代码完好。
+2. 把整个项目目录提交到一个 GitHub 仓库（公有或私有都可以）。
+   注意：不要把 career.db 和 .secret_key 提交上去。
+   在项目根目录新建 .gitignore，写入：
+
+       career.db
+       .secret_key
+       __pycache__/
+       *.log
+
+   如果你就是想带着演示数据上线，也可以提交 career.db；
+   不提交的话每次部署首次启动会自动灌入完整演示数据（70 个岗位等）。
+
+
+二、在 Render 上创建服务
+------------------------------------------------------
+方式 A：用仓库里的 render.yaml（最省事）
+  1. 打开 https://dashboard.render.com/ ，用 GitHub 账号注册登录。
+  2. 点 New +  →  Blueprint。
+  3. 选择你刚提交的仓库，Render 会自动识别根目录的 render.yaml。
+  4. 点 Apply，等构建完成。
+
+方式 B：手动创建
+  1. New +  →  Web Service  →  选择仓库。
+  2. 填写：
+       Name         campus-career（决定域名，可自定义）
+       Language     Python 3
+       Region       Singapore（离国内最近）
+       Build Command    echo no build step
+       Start Command    python server.py --host 0.0.0.0 --port $PORT
+       Instance Type    Free
+  3. 展开 Advanced → Add Environment Variable，添加：
+       PYTHONIOENCODING   utf-8
+       CC_SECRET_KEY      自己生成一串 64 位十六进制字符
+                          （Windows 上可运行：python -c "import secrets;print(secrets.token_hex(32))"）
+       ADMIN_PASSWORD     你想设定的管理员密码（至少 8 位，含字母和数字）
+  4. 点 Create Web Service。
+
+
+三、拿到网址
+------------------------------------------------------
+构建成功后会得到形如：
+
+    https://campus-career-xxxx.onrender.com
+
+这就是可以发给别人、也可以写进报告的公网网址。
+登录页地址是：
+
+    https://campus-career-xxxx.onrender.com/login
+
+任何人都能访问，可以自助注册学生账号；管理员用 admin + 你设置的 ADMIN_PASSWORD 登录。
+
+
+四、免费档的几个事实（提前知道，避免踩坑）
+------------------------------------------------------
+1. 休眠：免费实例 15 分钟无人访问会自动休眠，下一次打开需要等 30~60 秒
+   （页面会一直转圈，不是坏了）。想一直在线需要升级付费档。
+2. 数据不持久：免费档没有持久磁盘，每次重新部署（改代码、重启实例）
+   career.db 会回到初始状态，用户注册的账号和投递记录会丢失。
+   演示岗位、测评题、薪资数据都不会丢——首次启动会自动重新灌入。
+   需要数据长期保留，有两个办法：
+     a. 升级到付费档并挂载 Persistent Disk，把 Mount Path 设为 /data，
+        再添加环境变量 CC_DB_PATH=/data/career.db；
+     b. 换用带免费数据库的平台（如 Railway + Postgres），需要改数据层。
+3. 日志：Dashboard → Logs 里能看到首次启动打印的 admin 密码。
+   如果你设了 ADMIN_PASSWORD，密码就是你设的那个，日志里也会提示「密码来自环境变量」。
+4. 冷启动会跑一次数据播种，通常 1 秒内完成，不影响健康检查。
+
+
+五、常见问题
+------------------------------------------------------
+Q: 打开页面报 502 / 一直在加载？
+A: 多半是实例正在冷启动，等 1 分钟再刷新。持续 502 就去 Logs 看是否启动失败。
+
+Q: 提示 Application failed to respond？
+A: 检查 Start Command 是否用了 $PORT，端口必须是平台注入的 PORT。
+
+Q: 登录后刷新就掉线？
+A: 说明 CC_SECRET_KEY 没设置（每次实例重启密钥都变，旧 Cookie 全部失效）。
+   设置一个固定的值即可。
+
+Q: 想换成自己的域名？
+A: Dashboard → Settings → Custom Domain，按提示在域名服务商加一条 CNAME。
+   Render 会自动签发 HTTPS 证书，无需改代码。
+
+Q: 想在国内访问更快？
+A: Render 新加坡节点国内一般可直连。若确实很慢，可改用阿里云/腾讯云轻量应用服务器，
+   把项目传上去，运行 python server.py --host 0.0.0.0 --port 80，
+   再用 Nginx 反代并设置 CC_HTTPS_REDIRECT=1。
+
+
+六、环境变量一览
+------------------------------------------------------
+PORT              平台自动注入，无需手动设置
+CC_HOST           监听地址，默认 0.0.0.0
+PYTHONIOENCODING  utf-8（避免中文日志乱码）
+CC_SECRET_KEY     会话签名密钥，至少 32 位，强烈建议设置
+ADMIN_PASSWORD    首次启动时 admin 账号的密码（不设则随机生成并打印到日志）
+CC_DB_PATH        数据库文件路径，默认项目目录下 career.db（挂持久盘时指向 /data/career.db）
+CC_HTTPS_REDIRECT 设为 1 时，把 http 请求 301 跳到 https（用 Nginx 反代时用）

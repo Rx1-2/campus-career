@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>求职工具箱 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="面试题库、企业库、各城市各方向薪资参考与简历自检清单，求职准备一站式搞定。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <h1>求职工具箱</h1>
+        <p>面试题库、企业库与薪资参考三件套：先把常见问题过一遍，再摸清目标企业和市场行情，投递前心里有底。</p>
+      </div>
+
+      <div class="toolbar" style="margin-bottom:20px">
+        <div class="sorter">
+          <button class="opt is-active" data-tab="interview" type="button">面试题库</button>
+          <button class="opt" data-tab="companies" type="button">企业库</button>
+          <button class="opt" data-tab="salary" type="button">薪资参考</button>
+        </div>
+      </div>
+
+      <!-- 面试题库 -->
+      <section id="tab-interview">
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+            <div class="filter-options" id="catFilter" style="gap:7px"></div>
+            <input class="input" id="qaSearch" type="search" placeholder="搜索题目关键词" style="max-width:240px;margin-left:auto">
+          </div>
+        </div>
+        <div id="qaList"><div class="empty">加载中…</div></div>
+      </section>
+
+      <!-- 企业库 -->
+      <section id="tab-companies" hidden>
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+            <div class="filter-options" id="indFilter" style="gap:7px"></div>
+            <input class="input" id="coSearch" type="search" placeholder="搜索企业名称或标签" style="max-width:240px;margin-left:auto">
+          </div>
+        </div>
+        <div class="card-grid" id="coList"><div class="empty">加载中…</div></div>
+      </section>
+
+      <!-- 薪资参考 -->
+      <section id="tab-salary" hidden>
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+            <label class="field-label" style="margin:0">方向</label>
+            <select class="select" id="salDirection" style="max-width:200px"></select>
+            <label class="field-label" style="margin:0">城市</label>
+            <select class="select" id="salCity" style="max-width:200px"></select>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>薪资分位参考</h3><span style="font-size:12.5px;color:var(--ink-3)">单位：元/月</span></div>
+          <div class="panel-body"><div class="table-wrap" id="salTable"><div class="empty">加载中…</div></div></div>
+        </div>
+        <div class="note note-info" style="margin-top:14px">P25 表示该方向 25% 的岗位薪资低于此值，P50 为中位数，P75 表示 75% 的岗位低于此值。数据为教学演示数据，仅供参考。</div>
+      </section>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("toolbox");
+
+    /* ---------------- 选项卡 ---------------- */
+    document.querySelectorAll("[data-tab]").forEach(b => {
+      b.addEventListener("click", () => {
+        document.querySelectorAll("[data-tab]").forEach(x => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        ["interview", "companies", "salary"].forEach(t => {
+          document.getElementById("tab-" + t).hidden = t !== b.dataset.tab;
+        });
+      });
+    });
+
+    /* ---------------- 面试题库 ---------------- */
+    const interview = { category: "", keyword: "" };
+    let interviewCats = [];
+
+    function renderCats() {
+      const cats = [{ v: "", l: "全部" }].concat(interviewCats.map(c => ({ v: c, l: c })));
+      document.getElementById("catFilter").innerHTML = cats.map(c =>
+        `<button class="opt ${interview.category === c.v ? "is-active" : ""}" data-cat="${App.esc(c.v)}" type="button">${App.esc(c.l)}</button>`).join("");
+      document.querySelectorAll("#catFilter [data-cat]").forEach(b => b.addEventListener("click", () => {
+        interview.category = b.dataset.cat;
+        renderCats(); loadInterview();
+      }));
+    }
+
+    async function loadInterview() {
+      const p = {};
+      if (interview.category) p.category = interview.category;
+      if (interview.keyword) p.keyword = interview.keyword;
+      try {
+        const data = await App.api.interview(p);
+        interviewCats = data.categories;
+        if (!interviewCats.length) { /* noop */ }
+        renderCats();
+        document.getElementById("qaList").innerHTML = data.items.length
+          ? data.items.map(q => `
+            <div class="qa-item">
+              <div class="qa-q"><span>${App.esc(q.question)}</span>
+                <span class="badge-difficulty diff-${App.esc(q.difficulty)}" style="margin-left:8px">${App.esc(q.difficulty)}</span>
+                <span class="chip" style="margin-left:6px">${App.esc(q.category)}</span>
+                <span class="qa-toggle">查看参考答案</span>
+              </div>
+              <div class="qa-a">${App.esc(q.answer).replace(/\n/g, "<br>")}</div>
+            </div>`).join("")
+          : `<div class="empty"><div class="empty-icon">💬</div>没有匹配的题目</div>`;
+
+        document.querySelectorAll("#qaList .qa-q").forEach(el => {
+          el.addEventListener("click", () => {
+            const item = el.parentElement;
+            item.classList.toggle("is-open");
+            el.querySelector(".qa-toggle").textContent =
+              item.classList.contains("is-open") ? "收起答案" : "查看参考答案";
+          });
+        });
+      } catch (err) { App.toast(err.message, "err"); }
+    }
+
+    document.getElementById("qaSearch").addEventListener("input", App.debounce(function () {
+      interview.keyword = this.value.trim();
+      loadInterview();
+    }, 300));
+
+    /* ---------------- 企业库 ---------------- */
+    const co = { industry: "", keyword: "" };
+    let industries = [];
+
+    function renderInds() {
+      const opts = [{ v: "", l: "全部" }].concat(industries.map(c => ({ v: c, l: c })));
+      document.getElementById("indFilter").innerHTML = opts.map(c =>
+        `<button class="opt ${co.industry === c.v ? "is-active" : ""}" data-ind="${App.esc(c.v)}" type="button">${App.esc(c.l)}</button>`).join("");
+      document.querySelectorAll("#indFilter [data-ind]").forEach(b => b.addEventListener("click", () => {
+        co.industry = b.dataset.ind;
+        renderInds(); loadCompanies();
+      }));
+    }
+
+    async function loadCompanies() {
+      const p = {};
+      if (co.industry) p.industry = co.industry;
+      if (co.keyword) p.keyword = co.keyword;
+      try {
+        const data = await App.api.companies(p);
+        document.getElementById("coList").innerHTML = data.items.length
+          ? data.items.map(c => `
+            <div class="info-card">
+              <div style="display:flex;gap:12px;align-items:flex-start">
+                <div class="job-card-logo" style="width:42px;height:42px;flex:0 0 42px">${App.esc(c.logo_text || c.name.slice(0, 2))}</div>
+                <div style="min-width:0">
+                  <h4>${App.esc(c.name)}</h4>
+                  <div style="font-size:12.5px;color:var(--ink-3)">${App.esc(c.industry)} · ${App.esc(c.size)} · ${App.esc(c.city)}</div>
+                </div>
+              </div>
+              <p style="margin-top:10px">${App.esc(c.intro)}</p>
+              <div class="tags-row">${(c.tags || "").split(",").filter(Boolean).map(t => `<span class="chip chip-success">${App.esc(t)}</span>`).join("")}</div>
+              <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13px;color:var(--primary);font-weight:600">在招 ${c.job_count} 个岗位</span>
+                <button class="btn btn-light btn-sm" data-company="${c.id}" type="button">查看在招岗位</button>
+              </div>
+            </div>`).join("")
+          : `<div class="empty"><div class="empty-icon">🏢</div>没有匹配的企业</div>`;
+
+        document.querySelectorAll("[data-company]").forEach(b => {
+          b.addEventListener("click", () => loadCompanyJobs(Number(b.dataset.company)));
+        });
+      } catch (err) { App.toast(err.message, "err"); }
+    }
+
+    async function loadCompanyJobs(id) {
+      try {
+        const c = await App.api.company(id);
+        document.querySelectorAll("[data-tab]").forEach(x => x.classList.remove("is-active"));
+        document.querySelector('[data-tab="companies"]').classList.add("is-active");
+        ["interview", "salary"].forEach(t => { document.getElementById("tab-" + t).hidden = true; });
+        document.getElementById("tab-companies").hidden = false;
+
+        document.getElementById("coList").className = "";
+        document.getElementById("coList").innerHTML = `
+          <div class="panel" style="grid-column:1/-1">
+            <div class="panel-head">
+              <h3>${App.esc(c.name)} · 在招岗位（${c.jobs.length}）</h3>
+              <button class="btn btn-ghost btn-sm" id="backCompanies" type="button">返回企业列表</button>
+            </div>
+            <div class="panel-body">
+              <p style="color:var(--ink-2);font-size:13.5px">${App.esc(c.intro)}</p>
+              <div class="job-list" style="margin-top:12px">
+                ${c.jobs.length ? c.jobs.map(App.renderJobCard).join("") : '<div class="empty">暂无在招岗位</div>'}
+              </div>
+            </div>
+          </div>`;
+        document.getElementById("backCompanies").addEventListener("click", () => {
+          document.getElementById("coList").className = "card-grid";
+          loadCompanies();
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (err) { App.toast(err.message, "err"); }
+    }
+
+    document.getElementById("coSearch").addEventListener("input", App.debounce(function () {
+      co.keyword = this.value.trim();
+      document.getElementById("coList").className = "card-grid";
+      loadCompanies();
+    }, 300));
+
+    /* ---------------- 薪资参考 ---------------- */
+    let salLoaded = false;
+
+    function renderSalaryTable(items, direction) {
+      if (!items.length) {
+        document.getElementById("salTable").innerHTML = `<div class="empty">该方向暂无数据</div>`;
+        return;
+      }
+      const head = direction
+        ? `<tr><th>城市</th><th>学历</th><th>P25</th><th>P50（中位）</th><th>P75</th></tr>`
+        : `<tr><th>方向</th><th>城市</th><th>学历</th><th>P25</th><th>P50（中位）</th><th>P75</th></tr>`;
+      const rows = items.map(r => `
+        <tr>
+          ${direction ? "" : `<td><strong>${App.esc(r.direction)}</strong></td>`}
+          <td>${App.esc(r.city)}</td>
+          <td>${App.esc(r.degree)}</td>
+          <td class="num">${r.p25.toLocaleString()}</td>
+          <td class="num">${r.p50.toLocaleString()}</td>
+          <td class="num">${r.p75.toLocaleString()}</td>
+        </tr>`).join("");
+      document.getElementById("salTable").innerHTML =
+        `<table class="data"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+    }
+
+    async function loadSalary() {
+      const p = {};
+      const d = document.getElementById("salDirection").value;
+      const c = document.getElementById("salCity").value;
+      if (d) p.direction = d;
+      if (c) p.city = c;
+      try {
+        const data = await App.api.salary(p);
+        if (!salLoaded) {
+          const dirSel = document.getElementById("salDirection");
+          dirSel.innerHTML = `<option value="">全部方向</option>` +
+            data.directions.map(x => `<option value="${App.esc(x)}">${App.esc(x)}</option>`).join("");
+          const citySel = document.getElementById("salCity");
+          citySel.innerHTML = `<option value="">全部城市</option>` +
+            data.cities.map(x => `<option value="${App.esc(x)}">${App.esc(x)}</option>`).join("");
+          dirSel.value = d; citySel.value = c;
+          salLoaded = true;
+        }
+        renderSalaryTable(data.items, d);
+      } catch (err) { App.toast(err.message, "err"); }
+    }
+
+    document.getElementById("salDirection").addEventListener("change", loadSalary);
+    document.getElementById("salCity").addEventListener("change", loadSalary);
+
+    /* ---------------- 初始化 ---------------- */
+    (async function init() {
+      const [iv, coData, filters] = await Promise.allSettled([
+        App.api.interview({}), App.api.companies({}), App.api.filters()
+      ]);
+      if (iv.status === "fulfilled") { interviewCats = iv.value.categories; renderCats(); }
+      loadInterview();
+
+      if (coData.status === "fulfilled") {
+        industries = Array.from(new Set(coData.value.items.map(c => c.industry)));
+        renderInds();
+      }
+      loadCompanies();
+      loadSalary();
+
+      if (location.hash === "#companies") document.querySelector('[data-tab="companies"]').click();
+      if (location.hash === "#salary") document.querySelector('[data-tab="salary"]').click();
+    })();
+  </script>
+</body>
+</html>

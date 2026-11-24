@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="大学生职业网登录入口，使用账号与密码登录后可使用岗位查询、职业测评、简历制作与投递跟踪等功能。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-body">
+  <div class="auth-wrap">
+    <section class="auth-brand">
+      <div class="auth-brand-inner">
+        <a class="brand auth-logo" href="/">
+          <span class="brand-mark">职</span>
+          <span>大学生职业网<span class="brand-sub">CAMPUS CAREER</span></span>
+        </a>
+        <h1>登录后，开始你的求职准备</h1>
+        <p class="auth-lead">一次登录，即可使用岗位筛选、职业倾向测评与成长路径、在线简历制作、实习投递跟踪、面试题库与薪资参考等全部功能。</p>
+        <ul class="auth-points">
+          <li>70+ 校招 / 实习 / 社招岗位，支持多条件筛选</li>
+          <li>18 题霍兰德职业倾向测评，自动生成四年路径</li>
+          <li>在线简历编辑与打印导出，投递记录随时可查</li>
+        </ul>
+        <p class="auth-note">本站为教学演示项目，站内岗位与企业信息均为模拟数据。</p>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <form class="auth-card" id="loginForm" autocomplete="on" novalidate>
+        <h2>账号登录</h2>
+        <p class="auth-sub">请输入站点为你分配的账号与密码</p>
+
+        <label class="field">
+          <span class="field-label">账号</span>
+          <input class="field-input" id="username" name="username" type="text"
+                 placeholder="请输入账号" autocomplete="username" required maxlength="20">
+        </label>
+
+        <label class="field">
+          <span class="field-label">密码</span>
+          <div class="field-pwd">
+            <input class="field-input" id="password" name="password" type="password"
+                   placeholder="请输入密码" autocomplete="current-password" required maxlength="64">
+            <button class="pwd-toggle" type="button" id="togglePwd" aria-label="显示密码">显示</button>
+          </div>
+        </label>
+
+        <label class="auth-check">
+          <input type="checkbox" id="remember"> 记住账号（仅保存在本机浏览器）
+        </label>
+
+        <div class="auth-error" id="loginError" role="alert" hidden></div>
+
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="loginBtn">登 录</button>
+
+        <p class="auth-hint">
+          还没有账号？<a href="/register">立即注册</a><br>
+          首次部署时，启动日志中会打印管理员账号与密码。
+        </p>
+      </form>
+    </section>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    (function () {
+      const form = document.getElementById("loginForm");
+      const userEl = document.getElementById("username");
+      const pwdEl = document.getElementById("password");
+      const errEl = document.getElementById("loginError");
+      const btn = document.getElementById("loginBtn");
+      const remember = document.getElementById("remember");
+      const next = App.param("next") || "/";
+
+      const savedUser = localStorage.getItem("cc_login_user");
+      if (savedUser) { userEl.value = savedUser; remember.checked = true; }
+
+      document.getElementById("togglePwd").addEventListener("click", function () {
+        const show = pwdEl.type === "password";
+        pwdEl.type = show ? "text" : "password";
+        this.textContent = show ? "隐藏" : "显示";
+      });
+
+      function showError(msg) {
+        errEl.textContent = msg;
+        errEl.hidden = false;
+      }
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        errEl.hidden = true;
+        const username = userEl.value.trim();
+        const password = pwdEl.value;
+        if (!username || !password) {
+          showError("请填写账号和密码");
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "登录中…";
+        try {
+          const user = await App.api.login(username, password);
+          if (remember.checked) localStorage.setItem("cc_login_user", username);
+          else localStorage.removeItem("cc_login_user");
+          App.toast("欢迎回来，" + (user.display_name || user.username), "ok");
+          const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+          setTimeout(() => { location.href = safeNext; }, 320);
+        } catch (err) {
+          showError(err.message);
+          pwdEl.focus();
+          pwdEl.select();
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "登 录";
+        }
+      });
+
+      App.api.me().then(function (user) {
+        if (user) location.href = "/";
+      }).catch(function () {});
+    })();
+  </script>
+</body>
+</html>

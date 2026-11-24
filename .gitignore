@@ -1,0 +1,4 @@
+career.db
+.secret_key
+__pycache__/
+*.log

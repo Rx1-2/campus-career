@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>职业规划测评 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="18 题职业倾向测评，输出霍兰德六维度得分、主次方向、匹配专业与推荐岗位，配套大一到大四成长路径。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <h1>职业规划指导</h1>
+        <p>18 道题，约 3 分钟。基于霍兰德职业兴趣理论，评估你在 R/I/A/S/E/C 六个维度上的倾向，给出主次方向、匹配专业与推荐岗位，并配套大一到大四的成长路径。</p>
+      </div>
+
+      <div id="quizIntro" class="panel" style="margin-bottom:18px">
+        <div class="panel-body" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+          <div>
+            <div style="font-weight:700;margin-bottom:4px">六维度说明</div>
+            <div style="font-size:13px;color:var(--ink-2)">R 实用型 · I 研究型 · A 艺术型 · S 社会型 · E 企业型 · C 常规型</div>
+          </div>
+          <a class="btn btn-primary" href="#quizForm">开始测评</a>
+        </div>
+      </div>
+
+      <div id="quizWrap">
+        <div class="empty">加载中…</div>
+      </div>
+
+      <div id="resultWrap"></div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("plan");
+
+    const QUIZ_KEY = "cc_quiz_result";
+    let quizData = null;
+    const answers = {};
+
+    function renderQuiz() {
+      const cards = quizData.questions.map(q => {
+        const opts = q.options.map((label, idx) => `
+          <label>
+            <input type="radio" name="q${q.id}" value="${idx}" data-qid="${q.id}">
+            <span>${App.esc(label)}</span>
+          </label>`).join("");
+        return `<div class="quiz-card" id="card${q.id}">
+          <div class="quiz-q"><span class="quiz-seq">${q.seq}</span><span>${App.esc(q.content)}</span></div>
+          <div class="likert">${opts}</div>
+        </div>`;
+      }).join("");
+
+      document.getElementById("quizWrap").innerHTML = `
+        <form id="quizForm" onsubmit="return false">
+          ${cards}
+          <div class="quiz-progress">
+            <div style="font-size:13px;color:var(--ink-2);white-space:nowrap">已完成 <strong id="doneCount">0</strong> / ${quizData.total}</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+            <button class="btn btn-primary" id="submitQuiz" type="button">查看测评结果</button>
+          </div>
+        </form>`;
+
+      document.querySelectorAll('#quizForm input[type="radio"]').forEach(input => {
+        input.addEventListener("change", () => {
+          answers[input.dataset.qid] = Number(input.value);
+          updateProgress();
+        });
+      });
+
+      document.getElementById("submitQuiz").addEventListener("click", submitQuiz);
+    }
+
+    function updateProgress() {
+      const done = Object.keys(answers).length;
+      document.getElementById("doneCount").textContent = done;
+      document.getElementById("progressFill").style.width = (done / quizData.total * 100).toFixed(1) + "%";
+    }
+
+    async function submitQuiz() {
+      const btn = document.getElementById("submitQuiz");
+      btn.disabled = true;
+      btn.textContent = "计算中…";
+      try {
+        const data = await App.api.submitQuiz(answers);
+        localStorage.setItem(QUIZ_KEY, JSON.stringify({ at: Date.now(), result: data }));
+        renderResult(data);
+      } catch (err) {
+        App.toast(err.message, "err");
+        const missing = quizData.questions.find(q => answers[q.id] === undefined);
+        if (missing) {
+          const card = document.getElementById("card" + missing.id);
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+          card.style.borderColor = "var(--danger)";
+          setTimeout(() => { card.style.borderColor = ""; }, 1600);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "查看测评结果";
+      }
+    }
+
+    function renderResult(r) {
+      const max = Math.max.apply(null, r.scores.map(s => s.score)) || 1;
+      const bars = r.scores.map(s => `
+        <div class="dim-bar">
+          <div class="dim-bar-head">
+            <span>${App.esc(s.name)} <span style="color:var(--ink-3);font-size:12px">${s.dim}</span></span>
+            <span style="color:var(--ink-3)">${s.score} 分 · ${s.percent}%</span>
+          </div>
+          <div class="dim-track"><div class="dim-fill ${s.dim === r.primary.dim ? "top" : ""}" style="width:${Math.max(4, Math.round(s.score / max * 100))}%"></div></div>
+        </div>`).join("");
+
+      const timeline = r.paths.map(p => `
+        <div class="tl-item">
+          <div class="tl-stage">${App.esc(p.stage)}</div>
+          <div class="tl-body">${App.esc(p.action)}</div>
+        </div>`).join("");
+
+      const jobs = r.primary.jobs.map(j =>
+        `<a class="chip chip-primary" href="/jobs?keyword=${encodeURIComponent(j)}">${App.esc(j)} →</a>`).join("");
+
+      const secondary = r.secondary.map(s =>
+        `<span class="chip chip-line">${App.esc(s.name)}</span>`).join("");
+
+      document.getElementById("resultWrap").innerHTML = `
+        <div style="margin-top:26px">
+          <div class="section-head"><div class="kicker">测评结果</div><h2>你的职业兴趣代码：${App.esc(r.code)}</h2></div>
+
+          <div class="split" style="grid-template-columns:1fr 1fr">
+            <div class="panel">
+              <div class="panel-head"><h3>六维度得分</h3></div>
+              <div class="panel-body">${bars}</div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>主要职业倾向</h3></div>
+              <div class="panel-body">
+                <div style="font-size:16px;font-weight:700;color:var(--primary);margin-bottom:6px">${App.esc(r.primary.name)}</div>
+                <p style="color:var(--ink-2);font-size:13.5px">${App.esc(r.primary.desc)}</p>
+                <div style="font-size:13px;color:var(--ink-3);margin-bottom:6px;margin-top:12px">匹配专业方向</div>
+                <div style="font-size:13.5px;color:var(--ink-2);margin-bottom:14px">${App.esc(r.primary.majors)}</div>
+                <div style="font-size:13px;color:var(--ink-3);margin-bottom:6px">推荐岗位（点击查看站内岗位）</div>
+                <div class="tags-row" style="margin-top:0">${jobs}</div>
+                <div style="font-size:13px;color:var(--ink-3);margin:14px 0 6px">次要倾向</div>
+                <div class="tags-row" style="margin-top:0">${secondary}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:16px">
+            <div class="panel-head"><h3>大学四年成长路径建议</h3></div>
+            <div class="panel-body"><div class="timeline">${timeline}</div></div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+            <a class="btn btn-primary" href="/jobs">按推荐方向浏览岗位</a>
+            <a class="btn btn-ghost" href="/resume">用测评结论完善简历</a>
+            <button class="btn btn-ghost" id="retake" type="button">重新测评</button>
+          </div>
+          <div class="note note-info" style="margin-top:14px">测评结果基于霍兰德职业兴趣理论的自陈量表计算，仅作为职业探索参考，不构成职业选择建议。</div>
+        </div>`;
+
+      document.getElementById("retake").addEventListener("click", () => {
+        Object.keys(answers).forEach(k => delete answers[k]);
+        localStorage.removeItem(QUIZ_KEY);
+        document.querySelectorAll('#quizForm input[type="radio"]').forEach(i => { i.checked = false; });
+        updateProgress();
+        document.getElementById("resultWrap").innerHTML = "";
+        document.getElementById("quizWrap").scrollIntoView({ behavior: "smooth" });
+      });
+
+      document.getElementById("resultWrap").scrollIntoView({ behavior: "smooth" });
+    }
+
+    (async function init() {
+      try {
+        quizData = await App.api.quiz();
+        renderQuiz();
+        const cached = localStorage.getItem(QUIZ_KEY);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (parsed && parsed.result) renderResult(parsed.result);
+          } catch (e) { /* 缓存损坏则忽略 */ }
+        }
+      } catch (err) {
+        document.getElementById("quizWrap").innerHTML = `<div class="empty">${App.esc(err.message)}</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

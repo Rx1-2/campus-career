@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>注册 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="大学生职业网注册入口，免费创建学生账号，即可使用岗位查询、职业测评、简历制作与投递跟踪等功能。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-body">
+  <div class="auth-wrap">
+    <section class="auth-brand">
+      <div class="auth-brand-inner">
+        <a class="brand auth-logo" href="/">
+          <span class="brand-mark">职</span>
+          <span>大学生职业网<span class="brand-sub">CAMPUS CAREER</span></span>
+        </a>
+        <h1>注册学生账号，开始求职准备</h1>
+        <p class="auth-lead">注册仅需几秒，无需邮箱验证。登录后即可使用岗位筛选、职业倾向测评与成长路径、在线简历制作、实习投递跟踪、面试题库与薪资参考等全部功能。</p>
+        <ul class="auth-points">
+          <li>账号仅用于区分个人数据，不对外展示</li>
+          <li>密码加盐哈希存储，站点不保存明文密码</li>
+          <li>简历与投递记录保存在本机数据库中</li>
+        </ul>
+        <p class="auth-note">本站为教学演示项目，站内岗位与企业信息均为模拟数据。</p>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <form class="auth-card" id="registerForm" autocomplete="on" novalidate>
+        <h2>创建账号</h2>
+        <p class="auth-sub">填写账号与密码，注册成功后自动登录</p>
+
+        <label class="field">
+          <span class="field-label">账号</span>
+          <input class="field-input" id="username" name="username" type="text"
+                 placeholder="3-20 位字母、数字或下划线" autocomplete="username" required maxlength="20">
+        </label>
+
+        <label class="field">
+          <span class="field-label">昵称<span class="field-optional">选填，默认与账号相同</span></span>
+          <input class="field-input" id="displayName" name="display_name" type="text"
+                 placeholder="页面右上角显示的名字" autocomplete="nickname" maxlength="20">
+        </label>
+
+        <label class="field">
+          <span class="field-label">密码</span>
+          <div class="field-pwd">
+            <input class="field-input" id="password" name="password" type="password"
+                   placeholder="至少 8 位，需含字母和数字" autocomplete="new-password" required maxlength="64">
+            <button class="pwd-toggle" type="button" id="togglePwd" aria-label="显示密码">显示</button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="field-label">确认密码</span>
+          <input class="field-input" id="password2" type="password"
+                 placeholder="再输入一次密码" autocomplete="new-password" required maxlength="64">
+        </label>
+
+        <div class="auth-error" id="registerError" role="alert" hidden></div>
+
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="registerBtn">注 册</button>
+
+        <p class="auth-hint">
+          已经有账号了？<a href="/login">返回登录</a>
+        </p>
+      </form>
+    </section>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    (function () {
+      const form = document.getElementById("registerForm");
+      const userEl = document.getElementById("username");
+      const nameEl = document.getElementById("displayName");
+      const pwdEl = document.getElementById("password");
+      const pwd2El = document.getElementById("password2");
+      const errEl = document.getElementById("registerError");
+      const btn = document.getElementById("registerBtn");
+
+      document.getElementById("togglePwd").addEventListener("click", function () {
+        const show = pwdEl.type === "password";
+        pwdEl.type = show ? "text" : "password";
+        pwd2El.type = show ? "text" : "password";
+        this.textContent = show ? "隐藏" : "显示";
+      });
+
+      function showError(msg) {
+        errEl.textContent = msg;
+        errEl.hidden = false;
+      }
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        errEl.hidden = true;
+        const username = userEl.value.trim();
+        const displayName = nameEl.value.trim();
+        const password = pwdEl.value;
+        if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+          showError("账号需为 3-20 位字母、数字或下划线");
+          return;
+        }
+        if (displayName && displayName.length > 20) {
+          showError("昵称最多 20 个字");
+          return;
+        }
+        if (password.length < 8) {
+          showError("密码至少 8 位");
+          return;
+        }
+        if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+          showError("密码需同时包含字母和数字");
+          return;
+        }
+        if (password !== pwd2El.value) {
+          showError("两次输入的密码不一致");
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "注册中…";
+        try {
+          const user = await App.api.register(username, password, displayName);
+          App.toast("注册成功，欢迎你，" + (user.display_name || user.username), "ok");
+          setTimeout(() => { location.href = "/"; }, 400);
+        } catch (err) {
+          showError(err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "注 册";
+        }
+      });
+
+      App.api.me().then(function (user) {
+        if (user) location.href = "/";
+      }).catch(function () {});
+    })();
+  </script>
+</body>
+</html>

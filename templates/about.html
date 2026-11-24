@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>关于项目 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="大学生职业网项目介绍：设计背景、五大功能模块、调研与测试方法、技术实现与数据声明。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <section class="hero" style="padding:44px 0 38px">
+    <div class="container">
+      <div class="hero-badge">网站设计与开发实践项目 · CampusCareer V3.2</div>
+      <h1 style="font-size:32px">面向在校大学生的<br><span class="em">一站式线上职业服务平台</span></h1>
+      <p class="hero-lead">解决大学生求职信息分散、职业规划指导不足、简历制作缺乏参考、实习岗位获取渠道有限这四个现实问题。</p>
+    </div>
+  </section>
+
+  <main class="page">
+    <div class="container">
+
+      <section class="section" style="padding-top:20px">
+        <div class="section-head"><div class="kicker">项目背景</div><h2>为什么做这个网站</h2></div>
+        <div class="panel">
+          <div class="panel-body">
+            <p style="color:var(--ink-2)">在校大学生在求职准备阶段普遍面临四类障碍：</p>
+            <div class="card-grid" style="margin-top:14px">
+              <div class="info-card"><h4>信息分散</h4><p>校招、实习信息散落在公众号、招聘 App、学校就业网和学长学姐的转发里，缺乏统一入口，检索成本高。</p></div>
+              <div class="info-card"><h4>规划指导不足</h4><p>低年级同学不清楚自己的职业兴趣方向，学校职业规划课程覆盖面有限，缺少可量化的自我评估工具。</p></div>
+              <div class="info-card"><h4>简历缺乏参考</h4><p>第一次写简历时不知道结构怎么排、经历怎么描述，网上模板要么收费要么排版混乱，导出后格式容易错乱。</p></div>
+              <div class="info-card"><h4>实习渠道有限</h4><p>实习岗位获取渠道少，投递后又难以跟踪进度，不知道简历是否被查看，容易陷入「投了没有任何反馈」的循环。</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top:0">
+        <div class="section-head"><div class="kicker">功能模块</div><h2>五大功能模块</h2><p>每个模块对应一类痛点，模块之间由数据打通（岗位库被其余模块复用）。</p></div>
+        <div class="module-grid">
+          <a class="module-card" href="/jobs">
+            <div class="module-icon" style="background:var(--primary-light)">🔍</div>
+            <h3>① 求职信息聚合</h3>
+            <p>岗位集中展示，关键词搜索 + 城市/行业/学历/类型/薪资/到岗天数六维筛选，三档排序与分页。</p>
+            <span class="module-link">进入 →</span>
+          </a>
+          <a class="module-card" href="/plan">
+            <div class="module-icon" style="background:#eef6ff">🧭</div>
+            <h3>② 职业规划指导</h3>
+            <p>18 题霍兰德测评，六维度得分可视化，输出主次方向、匹配专业、推荐岗位与四年成长路径。</p>
+            <span class="module-link">进入 →</span>
+          </a>
+          <a class="module-card" href="/resume">
+            <div class="module-icon" style="background:var(--accent-light)">📄</div>
+            <h3>③ 简历制作</h3>
+            <p>四步表单 + 三套模板实时预览，本地自动保存，一键打印导出 PDF，附 8 项自检清单。</p>
+            <span class="module-link">进入 →</span>
+          </a>
+          <a class="module-card" href="/interns">
+            <div class="module-icon" style="background:var(--success-light)">💼</div>
+            <h3>④ 实习岗位获取</h3>
+            <p>实习专区按到岗天数与可转正筛选，在线投递，手机号查询投递进度与状态分布。</p>
+            <span class="module-link">进入 →</span>
+          </a>
+          <a class="module-card" href="/toolbox">
+            <div class="module-icon" style="background:#f3efff">🧰</div>
+            <h3>⑤ 求职工具箱</h3>
+            <p>面试题库（22 题/5 分类/难度分级）、企业库（在招岗位联动）、17 方向 × 10 城市薪资分位参考。</p>
+            <span class="module-link">进入 →</span>
+          </a>
+          <a class="module-card" href="/roadmap" style="background:linear-gradient(150deg,#fff,#f8fbff)">
+            <div class="module-icon" style="background:#e9f0ff">🔄</div>
+            <h3>版本迭代</h3>
+            <p>V1 信息聚合 → V2 智能筛选与职业规划 → V3 投递闭环与工具箱 → V3.1 账号登录与多机访问 → V3.2 自助注册与公网部署，每轮以测试反馈驱动下一轮。</p>
+            <span class="module-link">查看 →</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="section" id="research" style="padding-top:0">
+        <div class="section-head"><div class="kicker">调研与测试</div><h2>怎么做调研与测试</h2></div>
+        <div class="split" style="grid-template-columns:1fr 1fr">
+          <div class="panel">
+            <div class="panel-head"><h3>调研方法</h3></div>
+            <div class="panel-body">
+              <ul style="color:var(--ink-2);padding-left:18px">
+                <li><strong>问卷调查</strong>：三轮共回收 200+ 份有效问卷，定位高频痛点与筛选维度需求。</li>
+                <li><strong>深度访谈</strong>：每轮访谈 8-15 名不同年级、不同专业的在校生。</li>
+                <li><strong>竞品分析</strong>：对比主流招聘 App 与高校就业网的信息组织方式。</li>
+                <li><strong>需求排序</strong>：按「提及频次 × 影响程度」对需求打分，决定迭代优先级。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>测试方式</h3></div>
+            <div class="panel-body">
+              <ul style="color:var(--ink-2);padding-left:18px">
+                <li><strong>可用性测试</strong>：每轮邀请用户完成任务脚本，记录完成率与耗时。</li>
+                <li><strong>接口测试</strong>：覆盖 9 个 API 的正常与异常路径（400/404/409）。</li>
+                <li><strong>功能回归</strong>：核心链路「筛选 → 详情 → 投递 → 查询」全流程回归。</li>
+                <li><strong>响应式检查</strong>：1440 / 1024 / 720 三档宽度的布局验证。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top:0">
+        <div class="section-head"><div class="kicker">技术实现</div><h2>技术栈与环境</h2></div>
+        <div class="panel">
+          <div class="panel-body">
+            <div class="table-wrap">
+              <table class="data">
+                <thead><tr><th>层次</th><th>技术选择</th><th>说明</th></tr></thead>
+                <tbody>
+                  <tr><td>后端</td><td>Python 标准库 HTTP Server</td><td>零第三方依赖，开箱即用，便于部署与演示</td></tr>
+                  <tr><td>数据存储</td><td>SQLite</td><td>单文件数据库，首次启动自动建表并灌入演示数据</td></tr>
+                  <tr><td>前端</td><td>原生 HTML / CSS / JavaScript</td><td>无构建步骤，直接由后端静态服务托管</td></tr>
+                  <tr><td>接口风格</td><td>REST + JSON</td><td>统一返回 <code>{code, msg, data}</code> 结构</td></tr>
+                  <tr><td>本地存储</td><td>localStorage</td><td>保存简历草稿与测评结果，刷新后不丢失</td></tr>
+                  <tr><td>账号与鉴权</td><td>PBKDF2-HMAC-SHA256 + 签名 Cookie</td><td>密码加盐哈希存储，会话用 HMAC 签名的 HttpOnly Cookie（12 小时有效），未登录访问返回 401 / 跳转登录页</td></tr>
+                  <tr><td>部署方式</td><td>0.0.0.0 监听 + 反向代理</td><td>局域网内其它电脑用 http://本机IP:8080 访问；公网经 Cloudflare Tunnel / nginx 反代，设 CC_HTTPS_REDIRECT=1 自动跳 HTTPS</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="stat-grid" style="margin-top:20px;grid-template-columns:repeat(4,1fr)">
+              <div class="stat-card"><div class="stat-num" data-stat="total_jobs">—</div><div class="stat-label">在招岗位</div></div>
+              <div class="stat-card"><div class="stat-num" data-stat="total_companies">—</div><div class="stat-label">合作企业</div></div>
+              <div class="stat-card"><div class="stat-num" data-stat="intern_jobs">—</div><div class="stat-label">实习岗位</div></div>
+              <div class="stat-card"><div class="stat-num" data-stat="cities">—</div><div class="stat-label">覆盖城市</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top:0">
+        <div class="note">
+          <strong>数据声明：</strong>本站所有企业、岗位、薪资与面试题内容均为教学演示用的模拟数据，不对应任何真实企业的真实招聘信息，也不构成任何求职或薪资建议。在线投递仅写入本地数据库用于演示流程，不会真实发送给企业。
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("about");
+    (async function () {
+      try {
+        const data = await App.api.stats();
+        document.querySelectorAll("[data-stat]").forEach(el => {
+          el.textContent = data[el.dataset.stat];
+        });
+      } catch (err) { /* 统计加载失败不影响正文 */ }
+    })();
+  </script>
+</body>
+</html>

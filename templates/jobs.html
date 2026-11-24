@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>求职信息 · 大学生职业网 CampusCareer</title>
+  <meta name="description" content="校招、实习、社招岗位集中展示，支持关键词搜索与城市、行业、学历、薪资、类型多维筛选。">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div data-header></div>
+
+  <main class="page">
+    <div class="container">
+      <div class="page-head">
+        <h1>求职信息聚合</h1>
+        <p>校招、实习、社招岗位集中展示，按城市、行业、学历、薪资与到岗天数多维筛选，支持最新、薪资、热度排序。</p>
+      </div>
+
+      <div class="split">
+        <aside class="panel">
+          <div class="panel-head"><h3>筛选条件</h3><button class="opt" id="resetFilters" type="button">重置</button></div>
+          <div class="panel-body" id="filterPanel">
+            <div class="empty">加载中…</div>
+          </div>
+        </aside>
+
+        <section>
+          <div class="search-bar">
+            <input class="input" id="keywordInput" type="search" placeholder="搜索岗位名称、企业名称或技能关键词，例如：前端、数据分析">
+            <button class="btn btn-primary" id="searchBtn" type="button">搜索</button>
+          </div>
+
+          <div class="toolbar">
+            <div class="result-count" id="resultCount">加载中…</div>
+            <div class="sorter" id="sorter">
+              <button class="opt is-active" data-sort="latest" type="button">最新发布</button>
+              <button class="opt" data-sort="salary" type="button">薪资最高</button>
+              <button class="opt" data-sort="heat" type="button">热度最高</button>
+            </div>
+          </div>
+
+          <div class="job-list" id="jobList"><div class="empty">加载中…</div></div>
+          <div class="pager" id="pager"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+  <script src="/static/js/app.js"></script>
+  <script>
+    App.mountLayout("jobs");
+
+    const state = {
+      keyword: App.param("keyword"),
+      city: App.param("city"),
+      industry: App.param("industry"),
+      degree: "",
+      type: App.param("type"),
+      salary: 0,
+      days: 0,
+      convertible: false,
+      sort: "latest",
+      page: 1,
+      page_size: 9,
+    };
+
+    const SALARY_OPTIONS = [
+      { value: 0, label: "不限" },
+      { value: 8000, label: "8k 以上" },
+      { value: 12000, label: "12k 以上" },
+      { value: 18000, label: "18k 以上" },
+      { value: 25000, label: "25k 以上" },
+    ];
+    const DAY_OPTIONS = [
+      { value: 0, label: "不限" },
+      { value: 3, label: "每周 3 天以上" },
+      { value: 4, label: "每周 4 天以上" },
+      { value: 5, label: "每周 5 天" },
+    ];
+
+    let filtersCache = null;
+
+    function optionGroup(title, options, activeValue, onPick) {
+      const btns = options.map(o =>
+        `<button class="opt ${String(o.value) === String(activeValue) ? "is-active" : ""}" data-value="${App.esc(o.value)}" type="button">${App.esc(o.label)}</button>`
+      ).join("");
+      return `<div class="filter-group"><div class="filter-label">${App.esc(title)}</div>
+        <div class="filter-options">${btns}</div></div>`;
+    }
+
+    function renderFilters() {
+      const f = filtersCache;
+      const cityOpts = [{ value: "", label: "不限" }].concat(f.cities.map(c => ({ value: c, label: c })));
+      const indOpts = [{ value: "", label: "不限" }].concat(f.industries.map(c => ({ value: c, label: c })));
+      const degOpts = [{ value: "", label: "不限" }].concat(f.degrees.map(c => ({ value: c, label: c })));
+      const typeOpts = [{ value: "", label: "不限" }].concat(f.types.map(c => ({ value: c, label: c })));
+
+      document.getElementById("filterPanel").innerHTML =
+        optionGroup("城市", cityOpts, state.city) +
+        optionGroup("行业", indOpts, state.industry) +
+        optionGroup("学历", degOpts, state.degree) +
+        optionGroup("岗位类型", typeOpts, state.type) +
+        optionGroup("薪资下限", SALARY_OPTIONS, state.salary) +
+        optionGroup("每周到岗", DAY_OPTIONS, state.days) +
+        `<div class="filter-group"><div class="filter-label">其他</div>
+           <div class="filter-options">
+             <button class="opt ${state.convertible ? "is-active" : ""}" data-toggle="convertible" type="button">可转正</button>
+           </div>
+         </div>`;
+
+      document.querySelectorAll("#filterPanel [data-value]").forEach(el => {
+        el.addEventListener("click", () => {
+          const group = el.closest(".filter-group");
+          const label = group.querySelector(".filter-label").textContent;
+          const map = { "城市": "city", "行业": "industry", "学历": "degree", "岗位类型": "type", "薪资下限": "salary", "每周到岗": "days" };
+          const key = map[label];
+          if (!key) return;
+          group.querySelectorAll("[data-value]").forEach(b => b.classList.remove("is-active"));
+          el.classList.add("is-active");
+          state[key] = key === "salary" || key === "days" ? Number(el.dataset.value) : el.dataset.value;
+          state.page = 1;
+          load();
+        });
+      });
+
+      const conv = document.querySelector('[data-toggle="convertible"]');
+      if (conv) conv.addEventListener("click", () => {
+        state.convertible = !state.convertible;
+        conv.classList.toggle("is-active", state.convertible);
+        state.page = 1;
+        load();
+      });
+    }
+
+    function params() {
+      const p = {
+        keyword: state.keyword, city: state.city, industry: state.industry,
+        degree: state.degree, type: state.type, sort: state.sort,
+        page: state.page, page_size: state.page_size,
+      };
+      if (state.salary) p.salary = state.salary;
+      if (state.days) p.days = state.days;
+      if (state.convertible) p.convertible = "1";
+      Object.keys(p).forEach(k => { if (p[k] === "" || p[k] === 0 || p[k] === null) delete p[k]; });
+      return p;
+    }
+
+    function renderPager(total, page, pages) {
+      const el = document.getElementById("pager");
+      if (pages <= 1) { el.innerHTML = ""; return; }
+      const parts = [];
+      parts.push(`<button data-page="${page - 1}" ${page <= 1 ? "disabled" : ""} type="button">上一页</button>`);
+      const nums = [];
+      for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || Math.abs(i - page) <= 1) nums.push(i);
+        else if (nums[nums.length - 1] !== "…") nums.push("…");
+      }
+      nums.forEach(n => {
+        if (n === "…") parts.push(`<button disabled type="button">…</button>`);
+        else parts.push(`<button data-page="${n}" class="${n === page ? "is-active" : ""}" type="button">${n}</button>`);
+      });
+      parts.push(`<button data-page="${page + 1}" ${page >= pages ? "disabled" : ""} type="button">下一页</button>`);
+      el.innerHTML = parts.join("");
+      el.querySelectorAll("button[data-page]").forEach(b => {
+        b.addEventListener("click", () => {
+          const p = Number(b.dataset.page);
+          if (!p || p === state.page || p < 1 || p > pages) return;
+          state.page = p;
+          load();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+    }
+
+    async function load() {
+      const listEl = document.getElementById("jobList");
+      try {
+        const data = await App.api.jobs(params());
+        document.getElementById("resultCount").innerHTML =
+          `共 <strong>${data.total}</strong> 个岗位 · 第 ${data.page}/${data.pages} 页`;
+        if (!data.items.length) {
+          listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div>
+            没有符合条件的岗位，试试减少筛选条件或换个关键词</div>`;
+        } else {
+          listEl.innerHTML = data.items.map(App.renderJobCard).join("");
+        }
+        renderPager(data.total, data.page, data.pages);
+      } catch (err) {
+        listEl.innerHTML = `<div class="empty">${App.esc(err.message)}</div>`;
+      }
+    }
+
+    function doSearch() {
+      state.keyword = document.getElementById("keywordInput").value.trim();
+      state.page = 1;
+      load();
+    }
+
+    document.getElementById("searchBtn").addEventListener("click", doSearch);
+    document.getElementById("keywordInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") doSearch();
+    });
+    document.getElementById("keywordInput").value = state.keyword;
+
+    document.querySelectorAll("#sorter [data-sort]").forEach(b => {
+      b.addEventListener("click", () => {
+        document.querySelectorAll("#sorter [data-sort]").forEach(x => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        state.sort = b.dataset.sort;
+        state.page = 1;
+        load();
+      });
+    });
+
+    document.getElementById("resetFilters").addEventListener("click", () => {
+      Object.assign(state, { keyword: "", city: "", industry: "", degree: "", type: "", salary: 0, days: 0, convertible: false, page: 1 });
+      document.getElementById("keywordInput").value = "";
+      renderFilters();
+      load();
+    });
+
+    (async function init() {
+      try {
+        filtersCache = await App.api.filters();
+        renderFilters();
+        await load();
+      } catch (err) {
+        App.toast(err.message, "err");
+      }
+    })();
+  </script>
+</body>
+</html>
